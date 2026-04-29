@@ -1,4 +1,4 @@
-import { Search, Mail, Phone, MapPin, MoreVertical, CreditCard, CheckCircle2, AlertCircle, Plus, Send } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, MoreVertical, CreditCard, CheckCircle2, AlertCircle, Plus, Send, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function FamilyProfile() {

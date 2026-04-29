@@ -1,12 +1,33 @@
 import { Swords, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/AuthProvider';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate('/app');
+    setError(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get('email') ?? '');
+    const password = String(formData.get('password') ?? '');
+
+    try {
+      await signIn(email, password);
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/app';
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,7 +96,7 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-semibold text-on-surface-variant block uppercase tracking-wider" htmlFor="password">Password</label>
-                <Link className="text-xs font-medium text-primary hover:text-primary-fixed transition-colors" to="#">Forgot password?</Link>
+                <Link className="text-xs font-medium text-primary hover:text-primary-fixed transition-colors" to="/forgot-password">Forgot password?</Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -91,19 +112,25 @@ export default function Login() {
                 />
               </div>
             </div>
-            
+            {error && (
+              <div className="rounded-md border border-error/30 bg-error-container/20 px-4 py-3 text-sm text-error">
+                {error}
+              </div>
+            )}
+
             <button 
-              className="w-full bg-primary-container text-on-primary-fixed text-xs font-bold uppercase tracking-wider py-4 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 mt-8 shadow-sm" 
+              className="w-full bg-primary-container text-on-primary-fixed text-xs font-bold uppercase tracking-wider py-4 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 mt-8 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed" 
+              disabled={isSubmitting}
               type="submit"
             >
-              Log In <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? 'Signing In...' : 'Log In'} <ArrowRight className="w-4 h-4" />
             </button>
           </form>
           
           <div className="mt-10 text-center">
             <p className="text-sm text-on-surface-variant">
               Don't have an academy registered? 
-              <Link className="text-primary hover:text-primary-fixed font-medium transition-colors ml-2" to="#">Sign up here</Link>
+              <Link className="text-primary hover:text-primary-fixed font-medium transition-colors ml-2" to="/signup">Sign up here</Link>
             </p>
           </div>
         </div>

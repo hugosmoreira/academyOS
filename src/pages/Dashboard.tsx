@@ -1,8 +1,12 @@
 import { 
   Plus, Users, UserPlus, UserMinus, TrendingUp,
-  MoreHorizontal, Verified, UserCheck, Cake
+  MoreHorizontal, Verified, UserCheck, Cake, Building2, Layers, ClipboardList
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { getDashboardMetrics, type DashboardMetrics } from '../services/dashboardService';
+import { useTenant } from '../features/tenancy/TenantProvider';
 
 const data = [
   { name: 'Jan', value: 10 },
@@ -13,19 +17,51 @@ const data = [
   { name: 'Jun', value: 45 },
 ];
 
+const FALLBACK_METRICS: DashboardMetrics = {
+  totalOrganizations: 1,
+  totalGyms: 2,
+  totalStudents: 342,
+  activeStudents: 342,
+  newStudentsThisMonth: 28,
+  totalPrograms: 6,
+  totalClassTemplates: 18,
+  totalAttendanceRecords: 1248,
+};
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}
+
 export default function Dashboard() {
+  const { activeOrganization } = useTenant();
+  const orgId = activeOrganization?.organization.id;
+
+  const metricsQuery = useQuery({
+    queryKey: ['dashboard', 'metrics', orgId ?? 'all'],
+    queryFn: () => getDashboardMetrics(orgId),
+    staleTime: 60_000,
+  });
+
+  const usingFallback = metricsQuery.isError;
+  const metrics: DashboardMetrics = metricsQuery.data ?? FALLBACK_METRICS;
+
   return (
     <div className="p-8 flex flex-col gap-6 max-w-[1600px] w-full mx-auto">
+      {usingFallback && (
+        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-200">
+          Live metrics could not be loaded. Showing fallback values. Check the browser console for the Supabase error.
+        </div>
+      )}
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-2 gap-4">
         <div>
           <h2 className="font-display text-3xl font-bold text-on-surface">Overview</h2>
           <p className="text-secondary mt-1">Here's what's happening at your academy today.</p>
         </div>
-        <button className="bg-primary-container text-on-primary-container font-bold text-xs uppercase tracking-wider px-4 py-3 rounded-lg hover:brightness-110 transition-all flex items-center gap-2">
+        <Link to="/app/students" className="bg-primary-container text-on-primary-container font-bold text-xs uppercase tracking-wider px-4 py-3 rounded-lg hover:brightness-110 transition-all flex items-center gap-2">
            <Plus className="w-5 h-5" />
            NEW MEMBER
-        </button>
+        </Link>
       </div>
       
       {/* KPI Cards Grid */}
@@ -37,9 +73,9 @@ export default function Dashboard() {
             <Users className="w-5 h-5 text-tertiary" />
           </div>
           <div className="flex items-baseline gap-3">
-             <span className="font-display text-4xl font-bold text-on-surface">342</span>
+             <span className="font-display text-4xl font-bold text-on-surface">{formatNumber(metrics.activeStudents)}</span>
              <span className="text-sm font-medium text-emerald-500 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1" /> 12%
+                <TrendingUp className="w-4 h-4 mr-1" /> live
              </span>
           </div>
         </div>
@@ -51,9 +87,9 @@ export default function Dashboard() {
              <UserPlus className="w-5 h-5 text-tertiary" />
           </div>
           <div className="flex items-baseline gap-3">
-             <span className="font-display text-4xl font-bold text-on-surface">28</span>
+             <span className="font-display text-4xl font-bold text-on-surface">{formatNumber(metrics.newStudentsThisMonth)}</span>
              <span className="text-sm font-medium text-emerald-500 flex items-center">
-               <TrendingUp className="w-4 h-4 mr-1" /> 5%
+               <TrendingUp className="w-4 h-4 mr-1" /> MTD
              </span>
           </div>
         </div>
@@ -61,14 +97,12 @@ export default function Dashboard() {
         {/* Card 3 */}
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-6 flex flex-col justify-between h-[140px]">
           <div className="flex justify-between items-start">
-            <span className="text-xs text-secondary uppercase tracking-wider font-semibold">Lost Members</span>
+            <span className="text-xs text-secondary uppercase tracking-wider font-semibold">Total Students</span>
              <UserMinus className="w-5 h-5 text-tertiary" />
           </div>
           <div className="flex items-baseline gap-3">
-             <span className="font-display text-4xl font-bold text-on-surface">4</span>
-             <span className="text-sm font-medium text-red-500 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1 transform rotate-180" /> 2%
-             </span>
+             <span className="font-display text-4xl font-bold text-on-surface">{formatNumber(metrics.totalStudents)}</span>
+             <span className="text-sm font-medium text-on-surface-variant">all-time</span>
           </div>
         </div>
         
@@ -76,13 +110,38 @@ export default function Dashboard() {
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-6 flex flex-col justify-between h-[140px] relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
           <div className="flex justify-between items-start relative z-10">
-            <span className="text-xs text-primary uppercase tracking-wider font-semibold">Net Growth</span>
+            <span className="text-xs text-primary uppercase tracking-wider font-semibold">Gyms</span>
             <TrendingUp className="w-5 h-5 text-primary" />
           </div>
           <div className="flex items-baseline gap-2 relative z-10">
-            <span className="font-display text-4xl font-bold text-primary">8.5</span>
-            <span className="text-xl font-bold text-primary">%</span>
+            <span className="font-display text-4xl font-bold text-primary">{formatNumber(metrics.totalGyms)}</span>
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">{formatNumber(metrics.totalOrganizations)} orgs</span>
           </div>
+        </div>
+      </div>
+
+      {/* Operations KPI Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Programs</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics.totalPrograms)}</div>
+          </div>
+          <Layers className="w-6 h-6 text-secondary" />
+        </div>
+        <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Class Templates</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics.totalClassTemplates)}</div>
+          </div>
+          <Building2 className="w-6 h-6 text-secondary" />
+        </div>
+        <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Attendance Records</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics.totalAttendanceRecords)}</div>
+          </div>
+          <ClipboardList className="w-6 h-6 text-secondary" />
         </div>
       </div>
       

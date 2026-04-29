@@ -1,4 +1,4 @@
-import { Download, MoreHorizontal, Calendar as CalendarIcon, Award, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Download, MoreHorizontal, Calendar as CalendarIcon, Award, CreditCard, ChevronRight, AlertTriangle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function FamilyOverview() {
