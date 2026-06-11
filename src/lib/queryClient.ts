@@ -5,7 +5,9 @@ export const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 30_000,
+      // Profile/membership/tenant data changes rarely; mutations invalidate
+      // their own keys, so a long staleTime mostly eliminates refetch chatter.
+      staleTime: 5 * 60_000,
     },
   },
 });

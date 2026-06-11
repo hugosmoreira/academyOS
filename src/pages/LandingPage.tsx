@@ -21,7 +21,7 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <Link to="/login" className="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors hidden md:block">Log In</Link>
-          <Link to="/login" className="bg-primary-container text-on-primary-container font-label-caps text-xs md:text-sm px-4 py-2 rounded font-bold hover:brightness-110 transition-all">Get Started</Link>
+          <Link to="/contact-sales" className="bg-primary-container text-on-primary-container font-label-caps text-xs md:text-sm px-4 py-2 rounded font-bold hover:brightness-110 transition-all">Book a Demo</Link>
         </div>
       </nav>
 
@@ -45,12 +45,12 @@ export default function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link to="/login" className="bg-primary-container text-on-primary-container font-label-caps text-sm px-8 py-4 rounded font-bold hover:brightness-110 transition-all w-full sm:w-auto">
-              Get Started Now
-            </Link>
-            <button className="bg-transparent text-on-surface border border-outline-variant font-label-caps text-sm px-8 py-4 rounded hover:bg-surface-container w-full sm:w-auto transition-colors font-bold uppercase tracking-wider">
+            <Link to="/contact-sales" className="bg-primary-container text-on-primary-container font-label-caps text-sm px-8 py-4 rounded font-bold hover:brightness-110 transition-all w-full sm:w-auto">
               Book a Demo
-            </button>
+            </Link>
+            <Link to="/login" className="bg-transparent text-on-surface border border-outline-variant font-label-caps text-sm px-8 py-4 rounded hover:bg-surface-container w-full sm:w-auto transition-colors font-bold uppercase tracking-wider text-center">
+              Academy Sign In
+            </Link>
           </div>
           
           <div className="mt-20 w-full max-w-5xl mx-auto aspect-video rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden relative shadow-2xl">
@@ -171,9 +171,9 @@ export default function LandingPage() {
                     <Check className="w-5 h-5 text-on-surface-variant" /> Attendance Tracking
                   </li>
                 </ul>
-                <button className="w-full bg-transparent text-on-surface border border-surface-container-highest text-xs uppercase tracking-wider font-bold py-3 rounded hover:bg-surface-container-high transition-colors">
+                <Link to="/contact-sales" className="block text-center w-full bg-transparent text-on-surface border border-surface-container-highest text-xs uppercase tracking-wider font-bold py-3 rounded hover:bg-surface-container-high transition-colors">
                   Start Free Trial
-                </button>
+                </Link>
               </div>
               
               {/* Professional (Highlighted) */}
@@ -201,8 +201,8 @@ export default function LandingPage() {
                     <Check className="w-5 h-5 text-primary" /> Rank & Promotion Tracking
                   </li>
                 </ul>
-                <Link to="/login" className="block text-center w-full bg-primary-container text-on-primary-container text-xs uppercase tracking-wider font-bold py-3 rounded hover:brightness-110 transition-all">
-                  Get Started
+                <Link to="/contact-sales" className="block text-center w-full bg-primary-container text-on-primary-container text-xs uppercase tracking-wider font-bold py-3 rounded hover:brightness-110 transition-all">
+                  Book a Demo
                 </Link>
               </div>
               
@@ -224,9 +224,9 @@ export default function LandingPage() {
                     <Check className="w-5 h-5 text-on-surface-variant" /> Dedicated Success Manager
                   </li>
                 </ul>
-                <button className="w-full bg-transparent text-on-surface border border-surface-container-highest text-xs uppercase tracking-wider font-bold py-3 rounded hover:bg-surface-container-high transition-colors">
+                <Link to="/contact-sales" className="block text-center w-full bg-transparent text-on-surface border border-surface-container-highest text-xs uppercase tracking-wider font-bold py-3 rounded hover:bg-surface-container-high transition-colors">
                   Contact Sales
-                </button>
+                </Link>
               </div>
             </div>
           </div>

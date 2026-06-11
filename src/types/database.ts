@@ -1,13 +1,44 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type RoleKey =
+export type PlatformRoleKey =
   | 'platform_super_admin'
+  | 'platform_admin'
+  | 'sales_admin'
+  | 'support_admin';
+
+export type OrganizationRoleKey =
   | 'organization_owner'
+  | 'organization_admin'
+  | 'organization_billing_manager';
+
+export type GymRoleKey =
+  | 'gym_owner'
   | 'gym_admin'
+  | 'head_coach'
+  | 'coach'
+  | 'assistant_coach'
   | 'instructor'
   | 'front_desk'
-  | 'student'
-  | 'parent';
+  | 'billing_staff';
+
+export type PortalRoleKey = 'student' | 'parent';
+
+export type RoleKey = PlatformRoleKey | OrganizationRoleKey | GymRoleKey | PortalRoleKey;
+
+export type SalesLeadStatus =
+  | 'new'
+  | 'contacted'
+  | 'demo_scheduled'
+  | 'converted'
+  | 'lost';
+
+export type ProfileStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+
+export type StudentPortalInviteStatus =
+  | 'pending'
+  | 'accepted'
+  | 'expired'
+  | 'cancelled';
 
 export type Database = {
   public: {
@@ -20,6 +51,7 @@ export type Database = {
           avatar_url: string | null;
           phone: string | null;
           platform_role: string | null;
+          status: ProfileStatus;
           created_at: string;
           updated_at: string;
         };
@@ -30,6 +62,7 @@ export type Database = {
           avatar_url?: string | null;
           phone?: string | null;
           platform_role?: string | null;
+          status?: ProfileStatus;
           created_at?: string;
           updated_at?: string;
         };
@@ -70,6 +103,7 @@ export type Database = {
           postal_code: string | null;
           phone: string | null;
           email: string | null;
+          logo_url: string | null;
           status: string;
           created_at: string;
           updated_at: string;
@@ -87,6 +121,7 @@ export type Database = {
           postal_code?: string | null;
           phone?: string | null;
           email?: string | null;
+          logo_url?: string | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -181,6 +216,7 @@ export type Database = {
           avatar_url: string | null;
           belt: string | null;
           stripes: number;
+          portal_access_enabled: boolean;
           metadata: Json;
           created_at: string;
           updated_at: string;
@@ -201,11 +237,86 @@ export type Database = {
           avatar_url?: string | null;
           belt?: string | null;
           stripes?: number;
+          portal_access_enabled?: boolean;
           metadata?: Json;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['students']['Insert']>;
+        Relationships: [];
+      };
+      invoices: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string | null;
+          student_id: string | null;
+          family_id: string | null;
+          invoice_number: string;
+          status: Database['public']['Enums']['billing_status'];
+          subtotal_cents: number;
+          discount_cents: number;
+          tax_cents: number;
+          total_cents: number;
+          due_date: string | null;
+          issued_at: string | null;
+          paid_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id?: string | null;
+          student_id?: string | null;
+          family_id?: string | null;
+          invoice_number: string;
+          status?: Database['public']['Enums']['billing_status'];
+          subtotal_cents?: number;
+          discount_cents?: number;
+          tax_cents?: number;
+          total_cents?: number;
+          due_date?: string | null;
+          issued_at?: string | null;
+          paid_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['invoices']['Insert']>;
+        Relationships: [];
+      };
+      student_portal_invites: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string;
+          student_id: string;
+          email: string;
+          invite_token: string;
+          status: StudentPortalInviteStatus;
+          expires_at: string;
+          accepted_at: string | null;
+          accepted_user_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id: string;
+          student_id: string;
+          email: string;
+          invite_token?: string;
+          status?: StudentPortalInviteStatus;
+          expires_at?: string;
+          accepted_at?: string | null;
+          accepted_user_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['student_portal_invites']['Insert']>;
         Relationships: [];
       };
       programs: {
@@ -298,9 +409,381 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['attendance_records']['Insert']>;
         Relationships: [];
       };
+      organization_invites: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string | null;
+          email: string;
+          full_name: string | null;
+          role_key: RoleKey;
+          token: string;
+          status: 'pending' | 'accepted' | 'expired' | 'revoked';
+          expires_at: string;
+          created_by: string | null;
+          accepted_at: string | null;
+          accepted_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id?: string | null;
+          email: string;
+          full_name?: string | null;
+          role_key: RoleKey;
+          token?: string;
+          status?: 'pending' | 'accepted' | 'expired' | 'revoked';
+          expires_at?: string;
+          created_by?: string | null;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['organization_invites']['Insert']>;
+        Relationships: [];
+      };
+      student_user_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string | null;
+          student_id: string;
+          profile_id: string;
+          status: 'active' | 'disabled';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id?: string | null;
+          student_id: string;
+          profile_id: string;
+          status?: 'active' | 'disabled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['student_user_links']['Insert']>;
+        Relationships: [];
+      };
+      parent_user_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          family_id: string;
+          profile_id: string;
+          status: 'active' | 'disabled';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          family_id: string;
+          profile_id: string;
+          status?: 'active' | 'disabled';
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['parent_user_links']['Insert']>;
+        Relationships: [];
+      };
+      sales_leads: {
+        Row: {
+          id: string;
+          full_name: string;
+          email: string;
+          phone: string | null;
+          academy_name: string | null;
+          message: string | null;
+          status: SalesLeadStatus;
+          source: string;
+          assigned_to: string | null;
+          converted_organization_id: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          full_name: string;
+          email: string;
+          phone?: string | null;
+          academy_name?: string | null;
+          message?: string | null;
+          status?: SalesLeadStatus;
+          source?: string;
+          assigned_to?: string | null;
+          converted_organization_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['sales_leads']['Insert']>;
+        Relationships: [];
+      };
+      platform_members: {
+        Row: {
+          id: string;
+          profile_id: string;
+          role_key: PlatformRoleKey;
+          status: 'active' | 'inactive' | 'suspended';
+          granted_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          role_key: PlatformRoleKey;
+          status?: 'active' | 'inactive' | 'suspended';
+          granted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['platform_members']['Insert']>;
+        Relationships: [];
+      };
+      parent_student_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          parent_profile_id: string;
+          student_id: string;
+          relationship: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          parent_profile_id: string;
+          student_id: string;
+          relationship?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['parent_student_links']['Insert']>;
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          organization_id: string | null;
+          gym_id: string | null;
+          actor_profile_id: string | null;
+          action: string;
+          entity_table: string | null;
+          entity_id: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id?: string | null;
+          gym_id?: string | null;
+          actor_profile_id?: string | null;
+          action: string;
+          entity_table?: string | null;
+          entity_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      admin_create_organization_bundle: {
+        Args: {
+          p_org_name: string;
+          p_org_slug: string;
+          p_gym_name: string;
+          p_gym_slug: string;
+          p_owner_email?: string | null;
+          p_owner_full_name?: string | null;
+          p_gym_timezone?: string | null;
+        };
+        Returns: {
+          organization_id: string;
+          gym_id: string;
+          invite_id: string | null;
+          invite_token: string | null;
+        }[];
+      };
+      admin_create_gym_bundle: {
+        Args: {
+          p_gym_name: string;
+          p_gym_slug: string;
+          p_gym_timezone?: string | null;
+          p_owner_email?: string | null;
+          p_owner_full_name?: string | null;
+          p_organization_id?: string | null;
+          p_new_org_name?: string | null;
+          p_new_org_slug?: string | null;
+        };
+        Returns: {
+          organization_id: string;
+          gym_id: string;
+          invite_id: string | null;
+          invite_token: string | null;
+        }[];
+      };
+      accept_organization_invite: {
+        Args: { p_token: string };
+        Returns: {
+          organization_id: string;
+          gym_id: string | null;
+          role_key: RoleKey;
+        }[];
+      };
+      lookup_invite_by_token: {
+        Args: { p_token: string };
+        Returns: {
+          organization_name: string;
+          organization_slug: string;
+          gym_name: string | null;
+          email: string;
+          full_name: string | null;
+          role_key: RoleKey;
+          status: 'pending' | 'accepted' | 'expired' | 'revoked';
+          expires_at: string;
+        }[];
+      };
+      get_platform_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          total_organizations: number;
+          active_organizations: number;
+          total_gyms: number;
+          total_users: number;
+          pending_invites: number;
+          new_sales_leads: number;
+          open_sales_leads: number;
+        }[];
+      };
+      can_access_gym: {
+        Args: { p_gym_id: string };
+        Returns: boolean;
+      };
+      submit_sales_lead: {
+        Args: {
+          p_full_name: string;
+          p_email: string;
+          p_phone?: string | null;
+          p_academy_name?: string | null;
+          p_message?: string | null;
+          p_source?: string | null;
+        };
+        Returns: string;
+      };
+      convert_sales_lead_to_organization: {
+        Args: {
+          p_lead_id: string;
+          p_org_name: string;
+          p_org_slug: string;
+          p_gym_name: string;
+          p_gym_slug: string;
+          p_owner_email?: string | null;
+          p_owner_full_name?: string | null;
+          p_gym_timezone?: string | null;
+        };
+        Returns: {
+          organization_id: string;
+          gym_id: string;
+          invite_id: string | null;
+          invite_token: string | null;
+        }[];
+      };
+      assign_org_member: {
+        Args: {
+          p_organization_id: string;
+          p_profile_id: string;
+          p_role_key: string;
+          p_status?: string | null;
+        };
+        Returns: string;
+      };
+      assign_gym_member: {
+        Args: {
+          p_gym_id: string;
+          p_profile_id: string;
+          p_role_key: string;
+          p_status?: string | null;
+        };
+        Returns: string;
+      };
+      set_platform_member: {
+        Args: {
+          p_profile_id: string;
+          p_role_key: string;
+          p_status?: string | null;
+        };
+        Returns: string;
+      };
+      has_platform_role: {
+        Args: { p_role_key: string };
+        Returns: boolean;
+      };
+      is_platform_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      can_manage_gym_students: {
+        Args: { target_gym_id: string };
+        Returns: boolean;
+      };
+      lookup_student_portal_invite_by_token: {
+        Args: { p_token: string };
+        Returns: {
+          id: string;
+          student_id: string;
+          organization_id: string;
+          gym_id: string;
+          email: string;
+          status: StudentPortalInviteStatus;
+          expires_at: string;
+          student_first_name: string;
+          student_last_name: string;
+          gym_name: string;
+          organization_name: string;
+        }[];
+      };
+      create_student_portal_invite: {
+        Args: { p_student_id: string; p_email?: string | null };
+        Returns: {
+          id: string;
+          invite_token: string;
+          status: StudentPortalInviteStatus;
+          expires_at: string;
+        }[];
+      };
+      accept_student_portal_invite: {
+        Args: { p_token: string };
+        Returns: {
+          organization_id: string;
+          gym_id: string;
+          student_id: string;
+        }[];
+      };
+      cancel_student_portal_invite: {
+        Args: { p_invite_id: string };
+        Returns: null;
+      };
+      resend_student_portal_invite: {
+        Args: { p_invite_id: string };
+        Returns: {
+          id: string;
+          invite_token: string;
+          status: StudentPortalInviteStatus;
+          expires_at: string;
+        }[];
+      };
+      disable_student_portal_access: {
+        Args: { p_student_id: string };
+        Returns: null;
+      };
+    };
     Enums: {
       member_status: 'active' | 'inactive' | 'prospect' | 'suspended' | 'archived';
       billing_status: 'draft' | 'open' | 'paid' | 'past_due' | 'void' | 'refunded';

@@ -10,9 +10,12 @@ export type StudentFormValues = {
   last_name: string;
   email: string;
   phone: string;
+  birthdate: string;
   belt: string;
   stripes: number;
   status: MemberStatus;
+  notes: string;
+  send_portal_invite: boolean;
 };
 
 type StudentFormProps = {
@@ -30,9 +33,12 @@ const EMPTY: StudentFormValues = {
   last_name: '',
   email: '',
   phone: '',
+  birthdate: '',
   belt: 'White',
   stripes: 0,
   status: 'active',
+  notes: '',
+  send_portal_invite: false,
 };
 
 export default function StudentForm({ initial, open, mode, loading, error, onClose, onSubmit }: StudentFormProps) {
@@ -46,9 +52,12 @@ export default function StudentForm({ initial, open, mode, loading, error, onClo
         last_name: initial.last_name ?? '',
         email: initial.email ?? '',
         phone: initial.phone ?? '',
+        birthdate: initial.birthdate ?? '',
         belt: initial.belt ?? 'White',
         stripes: initial.stripes ?? 0,
         status: (initial.status as MemberStatus) ?? 'active',
+        notes: '',
+        send_portal_invite: false,
       });
     } else {
       setValues(EMPTY);
@@ -128,13 +137,24 @@ export default function StudentForm({ initial, open, mode, loading, error, onClo
             />
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">Phone</label>
-            <input
-              value={values.phone}
-              onChange={(event) => handleChange('phone', event.target.value)}
-              className="w-full bg-surface border border-surface-container-high rounded-md px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">Phone</label>
+              <input
+                value={values.phone}
+                onChange={(event) => handleChange('phone', event.target.value)}
+                className="w-full bg-surface border border-surface-container-high rounded-md px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">Date of birth</label>
+              <input
+                type="date"
+                value={values.birthdate}
+                onChange={(event) => handleChange('birthdate', event.target.value)}
+                className="w-full bg-surface border border-surface-container-high rounded-md px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -175,6 +195,34 @@ export default function StudentForm({ initial, open, mode, loading, error, onClo
               ))}
             </select>
           </div>
+
+          <div>
+            <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">Notes</label>
+            <textarea
+              rows={3}
+              value={values.notes}
+              onChange={(event) => handleChange('notes', event.target.value)}
+              placeholder="Internal notes about this student (not visible to the student)."
+              className="w-full bg-surface border border-surface-container-high rounded-md px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          {mode === 'create' && (
+            <label className="flex items-start gap-3 rounded-md border border-surface-container-high bg-surface px-3 py-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={values.send_portal_invite}
+                onChange={(event) => handleChange('send_portal_invite', event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-on-surface">Send portal invite after creating</span>
+                <span className="block text-xs text-on-surface-variant mt-0.5">
+                  Generates an invite link to the email above so the student can sign up and access the portal.
+                </span>
+              </span>
+            </label>
+          )}
 
           {error && (
             <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">

@@ -1,11 +1,22 @@
 -- ============================================================================
--- AcademyOS: Setup Script (v4 — built from actual schema diagnostic)
--- 
--- ACTUAL tables: profiles, organizations, gyms, students, families, programs,
---   ranks, class_templates, class_sessions, attendance_records, membership_plans,
---   signed_waivers, student_memberships, student_programs, waiver_templates
--- 
--- MISSING tables needed by app: roles, organization_members, gym_members
+-- AcademyOS: Legacy Setup Script
+--
+-- DEPRECATED: This script predates the formal migrations in
+-- supabase/migrations/ and contains a dangerous handle_new_user() that
+-- automatically grants organization_owner / gym_admin on the seed
+-- "elite-discipline" org to every new auth user.
+--
+-- DO NOT RUN against a fresh database. The canonical setup is:
+--
+--   1. supabase/migrations/20260428020000_initial_multi_tenant_schema.sql
+--   2. supabase/migrations/20260428030000_add_student_belt_stripes.sql
+--   3. supabase/migrations/20260428040000_auth_onboarding_restructure.sql
+--   4. supabase/seed.sql
+--
+-- The phase-1 onboarding migration ships a safe profile-only
+-- handle_new_user() trigger and removes auto org-owner assignment.
+-- If you previously ran this script, run the new migration to overwrite
+-- the trigger.
 -- ============================================================================
 
 

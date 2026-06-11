@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Filter, Plus, MoreVertical, Eye, Pencil, ArchiveRestore, Trash2, Loader2, Users as UsersIcon,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   useArchiveStudent,
   useCreateStudent,
+  useCreatePortalInvite,
   useRestoreStudent,
   useStudentsQuery,
   useUpdateStudent,
@@ -15,56 +17,11 @@ import type { Student } from '../services/studentService';
 import { useTenant } from '../features/tenancy/TenantProvider';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { getFirstOrganization } from '../services/organizationService';
-import { getFirstGym } from '../services/gymService';
-import { useQuery } from '@tanstack/react-query';
+import { gymPath } from '../features/tenancy/gymPaths';
 
 type ActionMenuState = { id: string; x: number; y: number } | null;
 type DialogMode = 'create' | 'edit' | null;
 type ViewState = { open: boolean; student: Student | null };
-
-const FALLBACK_STUDENTS: Student[] = [
-  {
-    id: 'fallback-1',
-    organization_id: 'mock',
-    gym_id: 'mock',
-    family_id: null,
-    first_name: 'Marcus',
-    last_name: 'Silva',
-    preferred_name: null,
-    email: 'm.silva@example.com',
-    phone: '+1 (555) 010-1010',
-    birthdate: null,
-    status: 'active',
-    joined_at: null,
-    avatar_url: null,
-    belt: 'Blue',
-    stripes: 2,
-    metadata: {},
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'fallback-2',
-    organization_id: 'mock',
-    gym_id: 'mock',
-    family_id: null,
-    first_name: 'Elena',
-    last_name: 'Rostova',
-    preferred_name: null,
-    email: 'elena.r@example.com',
-    phone: null,
-    birthdate: null,
-    status: 'active',
-    joined_at: null,
-    avatar_url: null,
-    belt: 'Purple',
-    stripes: 1,
-    metadata: {},
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
 
 const BELT_BADGE: Record<string, { text: string; bg: string; border: string }> = {
   White: { text: 'text-on-surface', bg: 'bg-on-surface/5', border: 'border-on-surface' },
@@ -84,6 +41,7 @@ function getInitials(student: Student): string {
 
 export default function People() {
   const toast = useToast();
+  const navigate = useNavigate();
   const { activeOrganization, activeGym } = useTenant();
 
   const [search, setSearch] = useState('');
@@ -97,43 +55,23 @@ export default function People() {
 
   const orgIdFromTenant = activeOrganization?.organization.id;
   const gymIdFromTenant = activeGym?.gym.id;
-
-  const fallbackOrgQuery = useQuery({
-    queryKey: ['fallback-organization'],
-    queryFn: getFirstOrganization,
-    enabled: !orgIdFromTenant,
-    staleTime: 5 * 60_000,
-  });
-
-  const fallbackGymQuery = useQuery({
-    queryKey: ['fallback-gym', orgIdFromTenant ?? fallbackOrgQuery.data?.id ?? null],
-    queryFn: () => getFirstGym(orgIdFromTenant ?? fallbackOrgQuery.data?.id ?? undefined),
-    enabled: !gymIdFromTenant,
-    staleTime: 5 * 60_000,
-  });
-
-  const orgIdForInsert = orgIdFromTenant ?? fallbackOrgQuery.data?.id ?? null;
-  const gymIdForInsert = gymIdFromTenant ?? fallbackGymQuery.data?.id ?? null;
-  const canInsert = Boolean(orgIdForInsert && gymIdForInsert);
+  const canInsert = Boolean(orgIdFromTenant && gymIdFromTenant);
 
   const studentsQuery = useStudentsQuery({
     organizationId: orgIdFromTenant,
     gymId: gymIdFromTenant,
     includeArchived: showArchived,
     search,
+    enabled: Boolean(gymIdFromTenant),
   });
 
   const createMutation = useCreateStudent();
   const updateMutation = useUpdateStudent();
   const archiveMutation = useArchiveStudent();
   const restoreMutation = useRestoreStudent();
+  const invitePortalMutation = useCreatePortalInvite();
 
-  const usingFallback = studentsQuery.isError;
-  const students = useMemo(() => {
-    if (studentsQuery.data) return studentsQuery.data;
-    if (usingFallback) return FALLBACK_STUDENTS;
-    return [];
-  }, [studentsQuery.data, usingFallback]);
+  const students = studentsQuery.data ?? [];
 
   function closeForm() {
     setDialogMode(null);
@@ -142,15 +80,14 @@ export default function People() {
   }
 
   function openCreate() {
-    if (!canInsert) {
+    if (!canInsert || !gymIdFromTenant) {
       toast.error(
-        'No organization/gym available',
-        'Create at least one organization and gym in Supabase before adding students.',
+        'No gym selected',
+        'Select a gym before adding students.',
       );
       return;
     }
-    setEditing(null);
-    setDialogMode('create');
+    navigate(gymPath(gymIdFromTenant, 'students/new'));
   }
 
   function openEdit(student: Student) {
@@ -160,29 +97,52 @@ export default function People() {
   }
 
   function openView(student: Student) {
-    setViewing({ open: true, student });
     setActionMenu(null);
+    navigate(buildStudentProfilePath(activeGym?.gym.id, student.id));
   }
 
   async function handleSubmit(values: StudentFormValues) {
     setFormError(null);
     try {
       if (dialogMode === 'create') {
-        if (!orgIdForInsert || !gymIdForInsert) {
-          throw new Error('Missing organization_id or gym_id. Add an organization and a gym in Supabase first.');
+        if (!orgIdFromTenant || !gymIdFromTenant) {
+          throw new Error('Select a gym before creating a student.');
         }
-        await createMutation.mutateAsync({
-          organization_id: orgIdForInsert,
-          gym_id: gymIdForInsert,
+        if (values.send_portal_invite && !values.email.trim()) {
+          throw new Error('Email is required when sending a portal invite.');
+        }
+        const created = await createMutation.mutateAsync({
+          organization_id: orgIdFromTenant,
+          gym_id: gymIdFromTenant,
           first_name: values.first_name,
           last_name: values.last_name,
           email: values.email || null,
           phone: values.phone || null,
+          birthdate: values.birthdate || null,
           belt: values.belt,
           stripes: values.stripes,
           status: values.status,
+          portal_access_enabled: false,
         });
         toast.success('Student added', `${values.first_name} ${values.last_name} was created.`);
+
+        if (values.send_portal_invite) {
+          try {
+            await invitePortalMutation.mutateAsync({
+              studentId: created.id,
+              email: values.email,
+            });
+            toast.success('Portal invite created', 'Open the student profile to copy the invite link.');
+            navigate(buildStudentProfilePath(activeGym?.gym.id, created.id));
+            closeForm();
+            return;
+          } catch (inviteError) {
+            const message = inviteError instanceof Error
+              ? inviteError.message
+              : 'Unable to create portal invite.';
+            toast.error('Invite failed', message);
+          }
+        }
       } else if (dialogMode === 'edit' && editing) {
         await updateMutation.mutateAsync({
           id: editing.id,
@@ -191,6 +151,7 @@ export default function People() {
             last_name: values.last_name,
             email: values.email || null,
             phone: values.phone || null,
+            birthdate: values.birthdate || null,
             belt: values.belt,
             stripes: values.stripes,
             status: values.status,
@@ -204,6 +165,11 @@ export default function People() {
       setFormError(message);
       toast.error('Save failed', message);
     }
+  }
+
+  function buildStudentProfilePath(gymId: string | undefined, studentId: string): string {
+    if (!gymId) return '/app/gym-selector';
+    return gymPath(gymId, `students/${studentId}`);
   }
 
   async function handleArchive() {
@@ -263,9 +229,15 @@ export default function People() {
         </div>
       </div>
 
-      {usingFallback && (
+      {studentsQuery.isError && (
         <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-200">
-          Live student data could not be loaded. Showing demo records as a fallback. Check the browser console for the Supabase error.
+          Live student data could not be loaded. Check the browser console for the Supabase error.
+        </div>
+      )}
+
+      {!gymIdFromTenant && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+          Select a gym to view and manage students.
         </div>
       )}
 
@@ -300,8 +272,7 @@ export default function People() {
                       <div className="w-12 h-12 rounded-full bg-surface-container border border-surface-container-high flex items-center justify-center mb-3">
                         <UsersIcon className="w-5 h-5" />
                       </div>
-                      <div className="text-sm font-semibold text-on-surface">No students found</div>
-                      <div className="text-xs mt-1">Add your first student to get started.</div>
+                      <div className="text-sm font-semibold text-on-surface">No students yet. Add your first student.</div>
                       <button
                         type="button"
                         onClick={openCreate}

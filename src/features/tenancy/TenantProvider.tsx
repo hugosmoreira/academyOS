@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '../auth/AuthProvider';
-import { getGymMemberships, getOrganizationMemberships, type GymMembership, type OrganizationMembership } from './tenancy.service';
+import { useProfile } from '../auth/ProfileProvider';
+import type { GymMembership, OrganizationMembership } from './tenancy.service';
 
 const SELECTED_GYM_STORAGE_KEY = 'academyos:selectedGymId';
 
@@ -16,24 +15,18 @@ type TenantContextValue = {
 
 const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 
+/**
+ * Derives tenant state (active gym / organization) from ProfileProvider's
+ * already-fetched memberships. Issues no Supabase requests of its own, so
+ * organization_members / gym_members are only queried once per session.
+ */
 export function TenantProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const {
+    organizationMemberships: organizations,
+    accessibleGyms: gyms,
+    loading,
+  } = useProfile();
   const [activeGymId, setActiveGymIdState] = useState<string | null>(() => localStorage.getItem(SELECTED_GYM_STORAGE_KEY));
-
-  const organizationsQuery = useQuery({
-    queryKey: ['tenant', 'organizations', user?.id],
-    queryFn: () => getOrganizationMemberships(user!.id),
-    enabled: Boolean(user?.id),
-  });
-
-  const gymsQuery = useQuery({
-    queryKey: ['tenant', 'gyms', user?.id],
-    queryFn: () => getGymMemberships(user!.id),
-    enabled: Boolean(user?.id),
-  });
-
-  const gyms = gymsQuery.data ?? [];
-  const organizations = organizationsQuery.data ?? [];
 
   const activeGym = useMemo(() => {
     if (!gyms.length) return null;
@@ -59,9 +52,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       setActiveGymId(gymId) {
         setActiveGymIdState(gymId);
       },
-      loading: organizationsQuery.isLoading || gymsQuery.isLoading,
+      loading,
     }),
-    [activeGym, activeOrganization, gyms, gymsQuery.isLoading, organizations, organizationsQuery.isLoading],
+    [activeGym, activeOrganization, gyms, loading, organizations],
   );
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;

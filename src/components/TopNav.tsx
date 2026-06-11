@@ -2,6 +2,7 @@ import { Search, Bell, Settings, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthProvider';
 import { useTenant } from '../features/tenancy/TenantProvider';
+import { gymPath } from '../features/tenancy/gymPaths';
 
 type TopNavProps = {
   onMenuClick?: () => void;
@@ -9,7 +10,7 @@ type TopNavProps = {
 
 export default function TopNav({ onMenuClick }: TopNavProps) {
   const { user, signOut } = useAuth();
-  const { activeOrganization } = useTenant();
+  const { activeGym } = useTenant();
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between w-full px-6 sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-surface-container-high h-16">
@@ -25,10 +26,10 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
             type="text"
           />
         </div>
-        {activeOrganization && (
+        {activeGym && (
           <div className="hidden xl:flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Organization</span>
-            <span className="text-sm font-semibold text-on-surface">{activeOrganization.organization.name}</span>
+            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Gym</span>
+            <span className="text-sm font-semibold text-on-surface">{activeGym.gym.name}</span>
           </div>
         )}
       </div>
@@ -36,7 +37,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
         <button className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all active:scale-[0.98] duration-200 p-2 rounded-full flex items-center justify-center">
           <Bell className="w-5 h-5" />
         </button>
-        <Link to="/app/settings" className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all active:scale-[0.98] duration-200 p-2 rounded-full flex items-center justify-center">
+        <Link to={gymPath(activeGym?.gym.id, 'settings')} className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all active:scale-[0.98] duration-200 p-2 rounded-full flex items-center justify-center">
           <Settings className="w-5 h-5" />
         </Link>
         <button

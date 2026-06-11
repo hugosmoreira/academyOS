@@ -142,3 +142,54 @@ values
   ('11111111-1111-1111-1111-111111111111', null, 'Fundamentals', 'Core curriculum access.', 15000, 'month'),
   ('11111111-1111-1111-1111-111111111111', null, 'Unlimited Elite', 'All-access pass to all classes and open mat.', 22000, 'month'),
   ('11111111-1111-1111-1111-111111111111', null, 'Kids Program', 'Youth program membership.', 12000, 'month');
+
+-- ════════════════════════════════════════════════════════════════
+--  Dev: bootstrap a platform super admin
+--
+--  AcademyOS no longer auto-assigns org owners on signup. To explore
+--  the /admin area in development:
+--
+--    1. Sign up a Supabase auth user via the Dashboard (Authentication
+--       -> Users -> "Add user") using the email you want to test with.
+--    2. Confirm a `profiles` row was created by handle_new_user().
+--    3. Run the statement below, replacing the email.
+--
+--    update public.profiles
+--      set platform_role = 'platform_super_admin'
+--      where email = 'platform-admin@academyos.test';
+--
+--    -- Mirror into platform_members so the new model picks it up too:
+--    insert into public.platform_members (profile_id, role_key, status)
+--    select id, 'platform_super_admin', 'active'
+--      from public.profiles where email = 'platform-admin@academyos.test'
+--    on conflict (profile_id, role_key) do nothing;
+--
+--  After signing in with that user the app will redirect to /admin.
+--
+-- ----------------------------------------------------------------
+--  Dev: assign an org owner or gym staff role (no Edge Function)
+--
+--  Use the admin UI (/admin/users/:userId) to assign roles through
+--  the assign_org_member / assign_gym_member RPCs. The raw SQL flow
+--  for local-only testing looks like:
+--
+--    -- Assign organization owner
+--    select public.assign_org_member(
+--      '<organization_id>'::uuid,
+--      (select id from public.profiles where email = 'owner@test.com'),
+--      'organization_owner'
+--    );
+--
+--    -- Assign coach to a gym
+--    select public.assign_gym_member(
+--      '<gym_id>'::uuid,
+--      (select id from public.profiles where email = 'coach@test.com'),
+--      'coach'
+--    );
+--
+--  For production-quality flows, drive everything through the
+--  /admin/organizations/new wizard, the per-user role assignment UI
+--  on /admin/users/:userId, and the Edge Functions:
+--    * supabase/functions/create-organization     (org + first gym + invite)
+--    * supabase/functions/admin-invite-user       (invite any role + email)
+-- ════════════════════════════════════════════════════════════════

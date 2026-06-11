@@ -14,12 +14,18 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Users whose profile row was already verified this session — avoids
+// re-querying profiles on every token refresh / auth event.
+const ensuredProfileIds = new Set<string>();
+
 /**
  * Ensures a profiles row exists for the authenticated user.
  * Acts as a client-side fallback in case the server-side trigger
  * (on_auth_user_created) has not been installed yet.
  */
 async function ensureProfile(user: User) {
+  if (ensuredProfileIds.has(user.id)) return;
+  ensuredProfileIds.add(user.id);
   try {
     const { data: existing } = await supabase
       .from('profiles')
@@ -56,6 +62,8 @@ async function ensureProfile(user: User) {
     }
   } catch (err) {
     // Non-fatal: profile creation may fail due to RLS before the setup SQL is run.
+    // Allow a retry on the next auth event.
+    ensuredProfileIds.delete(user.id);
     console.warn('[AcademyOS] ⚠️ Could not ensure profile row:', err);
   }
 }
@@ -111,6 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment.');
         }
 
+        // AcademyOS no longer supports public self-service signup. Accounts
+        // are created by the platform team via Supabase Admin API or by
+        // accepting an invite token (see /signup/invite/:token). The raw
+        // Supabase signUp call remains available for the invite flow, which
+        // must verify a pending organization_invites row before reaching it.
         const { error } = await supabase.auth.signUp({
           email,
           password,

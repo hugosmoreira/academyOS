@@ -1,17 +1,31 @@
 import { supabase } from '../lib/supabase';
 
 export type DashboardMetrics = {
-  totalOrganizations: number;
-  totalGyms: number;
   totalStudents: number;
   activeStudents: number;
   newStudentsThisMonth: number;
-  totalPrograms: number;
-  totalClassTemplates: number;
-  totalAttendanceRecords: number;
+  /** null = the backing table/column is not provisioned yet (render an em dash). */
+  totalPrograms: number | null;
+  totalClassTemplates: number | null;
+  totalAttendanceRecords: number | null;
 };
 
-async function safeCount(table: string, modifier?: (q: any) => any): Promise<number> {
+/** Missing table (PGRST205/42P01) or missing column (PGRST204/42703). */
+function isMissingSchemaError(error: { code?: string; message?: string }): boolean {
+  const msg = error.message?.toLowerCase() ?? '';
+  return (
+    error.code === 'PGRST205' ||
+    error.code === 'PGRST204' ||
+    error.code === '42P01' ||
+    error.code === '42703' ||
+    msg.includes('does not exist') ||
+    msg.includes('schema cache')
+  );
+}
+
+type QueryModifier = (q: ReturnType<ReturnType<typeof supabase.from>['select']>) => typeof q;
+
+async function safeCount(table: string, modifier?: QueryModifier): Promise<number> {
   let query = supabase.from(table).select('id', { count: 'exact', head: true });
   if (modifier) query = modifier(query);
   const { count, error } = await query;
@@ -19,25 +33,34 @@ async function safeCount(table: string, modifier?: (q: any) => any): Promise<num
   return count ?? 0;
 }
 
-/** Like safeCount but returns 0 on error instead of throwing */
-async function resilientCount(table: string, modifier?: (q: any) => any): Promise<number> {
+/**
+ * Like safeCount, but a missing table/column resolves to null instead of
+ * killing the whole dashboard. Real errors (RLS, network) still throw.
+ */
+async function tolerantCount(table: string, modifier?: QueryModifier): Promise<number | null> {
   try {
     return await safeCount(table, modifier);
-  } catch {
-    return 0;
+  } catch (error) {
+    if (error && isMissingSchemaError(error as { code?: string; message?: string })) {
+      console.warn(`[AcademyOS] Dashboard metric skipped: ${table} is not provisioned yet.`, error);
+      return null;
+    }
+    throw error;
   }
 }
 
-export async function getDashboardMetrics(organizationId?: string): Promise<DashboardMetrics> {
+export async function getDashboardMetrics(gymId?: string): Promise<DashboardMetrics> {
+  if (!gymId) {
+    throw new Error('gymId is required for dashboard metrics');
+  }
+
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const orgFilter = (q: any) => (organizationId ? q.eq('organization_id', organizationId) : q);
+  const gymFilter: QueryModifier = (q) => q.eq('gym_id', gymId);
 
   const [
-    totalOrganizations,
-    totalGyms,
     totalStudents,
     activeStudents,
     newStudentsThisMonth,
@@ -45,22 +68,17 @@ export async function getDashboardMetrics(organizationId?: string): Promise<Dash
     totalClassTemplates,
     totalAttendanceRecords,
   ] = await Promise.all([
-    safeCount('organizations'),
-    safeCount('gyms', orgFilter),
-    safeCount('students', orgFilter),
-    safeCount('students', (q) => orgFilter(q).eq('status', 'active')),
+    safeCount('students', gymFilter),
+    safeCount('students', (q) => gymFilter(q).eq('status', 'active')),
     safeCount('students', (q) =>
-      orgFilter(q).gte('created_at', startOfMonth.toISOString()),
+      gymFilter(q).gte('created_at', startOfMonth.toISOString()),
     ),
-    safeCount('programs', orgFilter),
-    safeCount('class_templates', orgFilter),
-    // attendance_records doesn't have organization_id in the actual DB schema
-    resilientCount('attendance_records'),
+    tolerantCount('programs', gymFilter),
+    tolerantCount('class_templates', gymFilter),
+    tolerantCount('attendance_records', gymFilter),
   ]);
 
   return {
-    totalOrganizations,
-    totalGyms,
     totalStudents,
     activeStudents,
     newStudentsThisMonth,

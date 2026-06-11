@@ -12,6 +12,7 @@ export type ListStudentsOptions = {
   includeArchived?: boolean;
   search?: string;
   limit?: number;
+  enabled?: boolean;
 };
 
 export async function listStudents(options: ListStudentsOptions = {}): Promise<Student[]> {
@@ -102,4 +103,11 @@ export async function archiveStudent(id: string): Promise<Student> {
 
 export async function restoreStudent(id: string): Promise<Student> {
   return updateStudent(id, { status: 'active' });
+}
+
+export async function setPortalAccessEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<Student> {
+  return updateStudent(id, { portal_access_enabled: enabled });
 }

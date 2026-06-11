@@ -2,11 +2,13 @@ import { Swords, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthProvider';
+import { useProfile } from '../features/auth/ProfileProvider';
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
+  const { refetch } = useProfile();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,8 +23,11 @@ export default function Login() {
 
     try {
       await signIn(email, password);
-      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/app';
-      navigate(from, { replace: true });
+      // Force the profile/role queries to refresh now that the session is set,
+      // then bounce through RoleBasedRedirect which sends each role to its home.
+      await refetch();
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      navigate(from ?? '/post-login', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
     } finally {
@@ -127,10 +132,14 @@ export default function Login() {
             </button>
           </form>
           
-          <div className="mt-10 text-center">
+          <div className="mt-10 text-center space-y-2">
             <p className="text-sm text-on-surface-variant">
-              Don't have an academy registered? 
-              <Link className="text-primary hover:text-primary-fixed font-medium transition-colors ml-2" to="/signup">Sign up here</Link>
+              Don't have an academy registered?
+              <Link className="text-primary hover:text-primary-fixed font-medium transition-colors ml-2" to="/contact-sales">Contact sales</Link>
+            </p>
+            <p className="text-xs text-on-surface-variant/70">
+              Have an invite?
+              <Link className="text-primary hover:text-primary-fixed font-medium transition-colors ml-1" to="/signup">Accept invitation</Link>
             </p>
           </div>
         </div>
