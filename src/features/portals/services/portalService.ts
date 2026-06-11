@@ -153,6 +153,40 @@ export async function getPortalProgramEnrollments(
   return (data ?? []) as unknown as PortalProgramEnrollment[];
 }
 
+export type PortalAttendanceEntry = {
+  id: string;
+  student_id: string;
+  status: string;
+  checked_in_at: string;
+  class_sessions: {
+    session_date: string;
+    class_templates: { name: string; programs: { name: string } | null } | null;
+  } | null;
+};
+
+/**
+ * Attendance records for the caller's linked students, most recent first.
+ * RLS restricts rows to actively linked students, so a portal user can never
+ * read another student's attendance.
+ */
+export async function getPortalAttendance(
+  studentIds: string[],
+  limit = 50,
+): Promise<PortalAttendanceEntry[]> {
+  if (studentIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('attendance_records')
+    .select(
+      'id, student_id, status, checked_in_at, class_sessions(session_date, class_templates(name, programs(name)))',
+    )
+    .in('student_id', studentIds)
+    .order('checked_in_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PortalAttendanceEntry[];
+}
+
 export type PortalProgress = {
   belt: string | null;
   stripes: number;

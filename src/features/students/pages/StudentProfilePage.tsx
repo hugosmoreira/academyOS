@@ -14,6 +14,7 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { gymPath } from '../../tenancy/gymPaths';
+import StudentAttendancePanel from '../components/StudentAttendancePanel';
 import StudentPortalAccessPanel from '../components/StudentPortalAccessPanel';
 import StudentProgramsPanel from '../components/StudentProgramsPanel';
 import StudentSchedulePanel from '../components/StudentSchedulePanel';
@@ -146,7 +147,7 @@ export default function StudentProfilePage() {
       <section>
         {tab === 'overview' && <OverviewTab student={student} />}
         {tab === 'schedule' && <StudentSchedulePanel student={student} />}
-        {tab === 'attendance' && <PlaceholderTab title="Attendance" />}
+        {tab === 'attendance' && <StudentAttendancePanel student={student} />}
         {tab === 'progress' && <PlaceholderTab title="Progress" />}
         {tab === 'programs' && <StudentProgramsPanel student={student} />}
         {tab === 'waivers' && <PlaceholderTab title="Waivers" />}

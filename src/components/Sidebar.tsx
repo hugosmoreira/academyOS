@@ -149,10 +149,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
       <div className="px-6 pb-6 pt-4 space-y-4">
         <NavLink
-          to={activeGym ? `/kiosk/${activeGym.gym.slug ?? activeGym.gym.id}` : '/app/kiosk'}
+          to={gymPath(gymId, 'check-in')}
           onClick={onNavigate}
-          target={activeGym ? '_blank' : undefined}
-          rel={activeGym ? 'noreferrer' : undefined}
           className="w-full bg-primary text-on-primary-fixed hover:brightness-110 transition-all font-bold text-sm py-3 rounded flex items-center justify-center gap-2"
         >
            <QrCode className="w-4 h-4" />

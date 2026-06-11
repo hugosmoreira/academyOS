@@ -7,7 +7,8 @@ import ClassesPage from '../../features/classes/pages/ClassesPage';
 import LeadsPipeline from '../../pages/LeadsPipeline';
 import LeadDetail from '../../pages/LeadDetail';
 import FamilyProfile from '../../pages/FamilyProfile';
-import AttendanceReports from '../../pages/AttendanceReports';
+import AttendancePage from '../../features/attendance/pages/AttendancePage';
+import CheckInPage from '../../features/attendance/pages/CheckInPage';
 import ClassRoster from '../../pages/ClassRoster';
 import Instructors from '../../pages/Instructors';
 import InstructorProfile from '../../pages/InstructorProfile';
@@ -56,8 +57,9 @@ export function appRoutes() {
           <Route path="leads" element={<LeadsPipeline />} />
           <Route path="leads/:id" element={<LeadDetail />} />
           <Route path="families/:id" element={<FamilyProfile />} />
-          <Route path="attendance" element={<AttendanceReports />} />
+          <Route path="attendance" element={<AttendancePage />} />
           <Route path="attendance/:classId" element={<ClassRoster />} />
+          <Route path="check-in" element={<CheckInPage />} />
           <Route path="promotions" element={<Promotions />} />
           <Route path="plans" element={<MembershipPlans />} />
           <Route path="billing" element={<CollectionsDashboard />} />

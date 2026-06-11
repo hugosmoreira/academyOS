@@ -98,7 +98,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
           <div>
             <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Programs</span>
@@ -108,15 +108,22 @@ export default function Dashboard() {
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Class Templates</span>
-            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics?.totalClassTemplates)}</div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Classes Today</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics?.classesToday)}</div>
           </div>
           <Building2 className="w-6 h-6 text-secondary" />
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Attendance Records</span>
-            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics?.totalAttendanceRecords)}</div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Checked In Today</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics?.checkedInToday)}</div>
+          </div>
+          <ClipboardList className="w-6 h-6 text-secondary" />
+        </div>
+        <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <span className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Attendance This Week</span>
+            <div className="font-display text-2xl font-bold text-on-surface mt-1">{formatNumber(metrics?.attendanceThisWeek)}</div>
           </div>
           <ClipboardList className="w-6 h-6 text-secondary" />
         </div>

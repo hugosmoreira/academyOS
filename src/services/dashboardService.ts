@@ -6,8 +6,9 @@ export type DashboardMetrics = {
   newStudentsThisMonth: number;
   /** null = the backing table/column is not provisioned yet (render an em dash). */
   totalPrograms: number | null;
-  totalClassTemplates: number | null;
-  totalAttendanceRecords: number | null;
+  classesToday: number | null;
+  checkedInToday: number | null;
+  attendanceThisWeek: number | null;
 };
 
 /** Missing table (PGRST205/42P01) or missing column (PGRST204/42703). */
@@ -58,6 +59,14 @@ export async function getDashboardMetrics(gymId?: string): Promise<DashboardMetr
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+  const todayWeekday = new Date().getDay();
+
   const gymFilter: QueryModifier = (q) => q.eq('gym_id', gymId);
 
   const [
@@ -65,17 +74,29 @@ export async function getDashboardMetrics(gymId?: string): Promise<DashboardMetr
     activeStudents,
     newStudentsThisMonth,
     totalPrograms,
-    totalClassTemplates,
-    totalAttendanceRecords,
+    classesToday,
+    checkedInToday,
+    attendanceThisWeek,
   ] = await Promise.all([
     safeCount('students', gymFilter),
     safeCount('students', (q) => gymFilter(q).eq('status', 'active')),
     safeCount('students', (q) =>
       gymFilter(q).gte('created_at', startOfMonth.toISOString()),
     ),
-    tolerantCount('programs', gymFilter),
-    tolerantCount('class_templates', gymFilter),
-    tolerantCount('attendance_records', gymFilter),
+    tolerantCount('programs', (q) => gymFilter(q).eq('status', 'active')),
+    tolerantCount('class_templates', (q) =>
+      gymFilter(q).eq('status', 'active').eq('day_of_week', todayWeekday),
+    ),
+    tolerantCount('attendance_records', (q) =>
+      gymFilter(q)
+        .in('status', ['present', 'late'])
+        .gte('checked_in_at', startOfToday.toISOString()),
+    ),
+    tolerantCount('attendance_records', (q) =>
+      gymFilter(q)
+        .in('status', ['present', 'late'])
+        .gte('checked_in_at', startOfWeek.toISOString()),
+    ),
   ]);
 
   return {
@@ -83,7 +104,8 @@ export async function getDashboardMetrics(gymId?: string): Promise<DashboardMetr
     activeStudents,
     newStudentsThisMonth,
     totalPrograms,
-    totalClassTemplates,
-    totalAttendanceRecords,
+    classesToday,
+    checkedInToday,
+    attendanceThisWeek,
   };
 }

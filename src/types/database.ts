@@ -481,28 +481,58 @@ export type Database = {
           organization_id: string;
           gym_id: string;
           class_session_id: string;
+          class_template_id: string | null;
           student_id: string;
           status: Database['public']['Enums']['attendance_status'];
           checked_in_at: string;
-          checked_in_by_profile_id: string | null;
-          kiosk_session_id: string | null;
+          checked_in_by: string | null;
           notes: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           organization_id: string;
           gym_id: string;
           class_session_id: string;
+          class_template_id?: string | null;
           student_id: string;
           status?: Database['public']['Enums']['attendance_status'];
           checked_in_at?: string;
-          checked_in_by_profile_id?: string | null;
-          kiosk_session_id?: string | null;
+          checked_in_by?: string | null;
           notes?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['attendance_records']['Insert']>;
+        Relationships: [];
+      };
+      class_sessions: {
+        Row: {
+          id: string;
+          organization_id: string | null;
+          gym_id: string;
+          class_template_id: string | null;
+          session_date: string;
+          start_time: string | null;
+          end_time: string | null;
+          status: 'scheduled' | 'completed' | 'cancelled';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id?: string | null;
+          gym_id: string;
+          class_template_id?: string | null;
+          session_date: string;
+          start_time?: string | null;
+          end_time?: string | null;
+          status?: 'scheduled' | 'completed' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['class_sessions']['Insert']>;
         Relationships: [];
       };
       organization_invites: {

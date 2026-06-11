@@ -8,3 +8,4 @@ export * from './programService';
 export * from './rankService';
 export * from './classService';
 export * from './studentEnrollmentService';
+export * from './attendanceService';
