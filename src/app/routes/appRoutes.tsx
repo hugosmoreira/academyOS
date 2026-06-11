@@ -1,7 +1,9 @@
 import { Navigate, Route } from 'react-router-dom';
 import AppLayout from '../../layouts/AppLayout';
 import Dashboard from '../../pages/Dashboard';
-import Programs from '../../pages/Programs';
+import ProgramsPage from '../../features/programs/pages/ProgramsPage';
+import ProgramDetailPage from '../../features/programs/pages/ProgramDetailPage';
+import ClassesPage from '../../features/classes/pages/ClassesPage';
 import LeadsPipeline from '../../pages/LeadsPipeline';
 import LeadDetail from '../../pages/LeadDetail';
 import FamilyProfile from '../../pages/FamilyProfile';
@@ -45,8 +47,9 @@ export function appRoutes() {
           <Route path="students" element={<StudentsListPage />} />
           <Route path="students/new" element={<StudentCreatePage />} />
           <Route path="students/:studentId" element={<StudentProfilePage />} />
-          <Route path="programs" element={<Programs />} />
-          <Route path="classes" element={<Navigate to="../programs" replace />} />
+          <Route path="programs" element={<ProgramsPage />} />
+          <Route path="programs/:programId" element={<ProgramDetailPage />} />
+          <Route path="classes" element={<ClassesPage />} />
           <Route path="staff" element={<Instructors />} />
           <Route path="staff/:id" element={<InstructorProfile />} />
           <Route path="instructors" element={<Navigate to="../staff" replace />} />
@@ -72,7 +75,7 @@ export function appRoutes() {
         <Route path="students/new" element={<AppGymRedirect segment="students/new" />} />
         <Route path="students/:studentId" element={<AppGymLegacyRedirect />} />
         <Route path="programs" element={<AppGymRedirect segment="programs" />} />
-        <Route path="classes" element={<AppGymRedirect segment="programs" />} />
+        <Route path="classes" element={<AppGymRedirect segment="classes" />} />
         <Route path="leads" element={<AppGymRedirect segment="leads" />} />
         <Route path="leads/:id" element={<AppGymLegacyRedirect />} />
         <Route path="families" element={<AppGymRedirect segment="students" />} />

@@ -4,3 +4,7 @@ export * from './studentService';
 export * from './studentPortalInviteService';
 export * from './dashboardService';
 export * from './healthCheck';
+export * from './programService';
+export * from './rankService';
+export * from './classService';
+export * from './studentEnrollmentService';

@@ -34,6 +34,12 @@ export type SalesLeadStatus =
 
 export type ProfileStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 
+export type ActiveStatus = 'active' | 'inactive';
+
+export type ProgramAgeGroup = 'kids' | 'teens' | 'adults' | 'all';
+
+export type ProgramTrainingType = 'gi' | 'nogi' | 'striking' | 'mma' | 'fitness' | 'private';
+
 export type StudentPortalInviteStatus =
   | 'pending'
   | 'accepted'
@@ -325,9 +331,10 @@ export type Database = {
           organization_id: string;
           gym_id: string | null;
           name: string;
-          discipline: string;
           description: string | null;
-          active: boolean;
+          age_group: ProgramAgeGroup | null;
+          training_type: ProgramTrainingType | null;
+          status: ActiveStatus;
           created_at: string;
           updated_at: string;
         };
@@ -336,13 +343,46 @@ export type Database = {
           organization_id: string;
           gym_id?: string | null;
           name: string;
-          discipline?: string;
           description?: string | null;
-          active?: boolean;
+          age_group?: ProgramAgeGroup | null;
+          training_type?: ProgramTrainingType | null;
+          status?: ActiveStatus;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['programs']['Insert']>;
+        Relationships: [];
+      };
+      ranks: {
+        Row: {
+          id: string;
+          organization_id: string | null;
+          gym_id: string | null;
+          program_id: string;
+          name: string;
+          color: string | null;
+          order_index: number;
+          minimum_classes: number | null;
+          minimum_months: number | null;
+          status: ActiveStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id?: string | null;
+          gym_id?: string | null;
+          program_id: string;
+          name: string;
+          color?: string | null;
+          order_index?: number;
+          minimum_classes?: number | null;
+          minimum_months?: number | null;
+          status?: ActiveStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['ranks']['Insert']>;
         Relationships: [];
       };
       class_templates: {
@@ -353,11 +393,12 @@ export type Database = {
           program_id: string | null;
           name: string;
           description: string | null;
+          instructor_profile_id: string | null;
           capacity: number | null;
           day_of_week: number | null;
-          starts_at: string;
-          ends_at: string;
-          active: boolean;
+          start_time: string | null;
+          end_time: string | null;
+          status: ActiveStatus;
           created_at: string;
           updated_at: string;
         };
@@ -368,15 +409,70 @@ export type Database = {
           program_id?: string | null;
           name: string;
           description?: string | null;
+          instructor_profile_id?: string | null;
           capacity?: number | null;
           day_of_week?: number | null;
-          starts_at: string;
-          ends_at: string;
-          active?: boolean;
+          start_time?: string | null;
+          end_time?: string | null;
+          status?: ActiveStatus;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['class_templates']['Insert']>;
+        Relationships: [];
+      };
+      student_program_enrollments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string | null;
+          student_id: string;
+          program_id: string;
+          rank_id: string | null;
+          status: ActiveStatus;
+          started_at: string;
+          ended_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id?: string | null;
+          student_id: string;
+          program_id: string;
+          rank_id?: string | null;
+          status?: ActiveStatus;
+          started_at?: string;
+          ended_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['student_program_enrollments']['Insert']>;
+        Relationships: [];
+      };
+      student_class_enrollments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          gym_id: string | null;
+          student_id: string;
+          class_template_id: string;
+          status: ActiveStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          gym_id?: string | null;
+          student_id: string;
+          class_template_id: string;
+          status?: ActiveStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['student_class_enrollments']['Insert']>;
         Relationships: [];
       };
       attendance_records: {

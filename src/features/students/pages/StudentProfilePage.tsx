@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { gymPath } from '../../tenancy/gymPaths';
 import StudentPortalAccessPanel from '../components/StudentPortalAccessPanel';
+import StudentProgramsPanel from '../components/StudentProgramsPanel';
+import StudentSchedulePanel from '../components/StudentSchedulePanel';
 import { useStudentQuery } from '../hooks/useStudents';
 
 type TabKey =
@@ -143,10 +145,10 @@ export default function StudentProfilePage() {
 
       <section>
         {tab === 'overview' && <OverviewTab student={student} />}
-        {tab === 'schedule' && <PlaceholderTab title="Schedule" />}
+        {tab === 'schedule' && <StudentSchedulePanel student={student} />}
         {tab === 'attendance' && <PlaceholderTab title="Attendance" />}
         {tab === 'progress' && <PlaceholderTab title="Progress" />}
-        {tab === 'programs' && <PlaceholderTab title="Programs & Ranks" />}
+        {tab === 'programs' && <StudentProgramsPanel student={student} />}
         {tab === 'waivers' && <PlaceholderTab title="Waivers" />}
         {tab === 'billing' && <PlaceholderTab title="Billing" />}
         {tab === 'notes' && <PlaceholderTab title="Notes" />}

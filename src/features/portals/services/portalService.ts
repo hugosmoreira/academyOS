@@ -96,6 +96,63 @@ export async function getCurrentStudentProfile(
   return first?.students ?? null;
 }
 
+export type PortalClassEnrollment = {
+  id: string;
+  student_id: string;
+  class_templates: {
+    id: string;
+    name: string;
+    day_of_week: number | null;
+    start_time: string | null;
+    end_time: string | null;
+    programs: { name: string } | null;
+  } | null;
+};
+
+/**
+ * Active class enrollments for the given linked students, with the class
+ * template details needed to render the weekly portal schedule. RLS limits
+ * rows to students the caller is actively linked to.
+ */
+export async function getPortalClassEnrollments(
+  studentIds: string[],
+): Promise<PortalClassEnrollment[]> {
+  if (studentIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('student_class_enrollments')
+    .select(
+      'id, student_id, class_templates(id, name, day_of_week, start_time, end_time, programs(name))',
+    )
+    .in('student_id', studentIds)
+    .eq('status', 'active');
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PortalClassEnrollment[];
+}
+
+export type PortalProgramEnrollment = {
+  id: string;
+  student_id: string;
+  started_at: string;
+  programs: { name: string } | null;
+  ranks: { name: string; color: string | null } | null;
+};
+
+/** Active program enrollments (program + current rank) for linked students. */
+export async function getPortalProgramEnrollments(
+  studentIds: string[],
+): Promise<PortalProgramEnrollment[]> {
+  if (studentIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('student_program_enrollments')
+    .select('id, student_id, started_at, programs(name), ranks(name, color)')
+    .in('student_id', studentIds)
+    .eq('status', 'active');
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PortalProgramEnrollment[];
+}
+
 export type PortalProgress = {
   belt: string | null;
   stripes: number;
